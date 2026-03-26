@@ -77,40 +77,40 @@ experiments = [
 
     # ------------------------------------------------------------------
     # EXPERIMENT 3: Many-to-one zero-shot (paper's main setting)
-    # Train on ETTm1,ETTm2,ETTh2,electricity,traffic → Test on ETTh1 (unseen)
+    # Train on 6 datasets → Test on Weather (unseen)
+    # This is the EXACT setting from Table 1 of the paper
     # ------------------------------------------------------------------
     {
-        "name": "3_zero_shot_ETTh1",
-        "desc": "Zero-shot: Train 5 datasets → Test ETTh1 (unseen)",
-        "datasets": "ETTm1,ETTm2,ETTh2",
+        "name": "3_zero_shot_weather",
+        "desc": "Zero-shot (paper): Train 6 datasets → Test Weather (unseen)",
+        "datasets": "ETTm1,ETTm2,ETTh1,ETTh2,electricity,traffic",
         "eval_data": "ETTm1",
-        "target_data": "ETTh1",
+        "target_data": "weather",
         "pool": False,
         "semi_soft_pool": False,
     },
 
     # ------------------------------------------------------------------
-    # EXPERIMENT 4: Many-to-one zero-shot WITH Semi-Soft Pool
-    # Same as Exp 3 but with your novelty
+    # EXPERIMENT 4: Same as Exp 3 WITH Semi-Soft Pool (YOUR NOVELTY)
     # ------------------------------------------------------------------
     {
-        "name": "4_zero_shot_ETTh1_ssp",
-        "desc": "Zero-shot + Semi-Soft Pool: Train 5 datasets → Test ETTh1 (unseen)",
-        "datasets": "ETTm1,ETTm2,ETTh2",
+        "name": "4_zero_shot_weather_ssp",
+        "desc": "Zero-shot + Semi-Soft Pool: Train 6 → Test Weather (unseen)",
+        "datasets": "ETTm1,ETTm2,ETTh1,ETTh2,electricity,traffic",
         "eval_data": "ETTm1",
-        "target_data": "ETTh1",
+        "target_data": "weather",
         "pool": True,
         "semi_soft_pool": True,
     },
 
     # ------------------------------------------------------------------
     # EXPERIMENT 5: Zero-shot on ETTm1 (unseen)
-    # Train on ETTh1,ETTh2,ETTm2 → Test on ETTm1
+    # Train on 6 datasets (excluding ETTm1) → Test on ETTm1
     # ------------------------------------------------------------------
     {
         "name": "5_zero_shot_ETTm1",
-        "desc": "Zero-shot: Train ETTh1,ETTh2,ETTm2 → Test ETTm1 (unseen)",
-        "datasets": "ETTh1,ETTh2,ETTm2",
+        "desc": "Zero-shot: Train 6 datasets → Test ETTm1 (unseen)",
+        "datasets": "ETTm2,ETTh1,ETTh2,electricity,traffic,weather",
         "eval_data": "ETTh1",
         "target_data": "ETTm1",
         "pool": False,
@@ -118,12 +118,12 @@ experiments = [
     },
 
     # ------------------------------------------------------------------
-    # EXPERIMENT 6: Zero-shot on ETTm1 WITH Semi-Soft Pool
+    # EXPERIMENT 6: Same as Exp 5 WITH Semi-Soft Pool
     # ------------------------------------------------------------------
     {
         "name": "6_zero_shot_ETTm1_ssp",
-        "desc": "Zero-shot + Semi-Soft Pool: Train ETTh1,ETTh2,ETTm2 → Test ETTm1 (unseen)",
-        "datasets": "ETTh1,ETTh2,ETTm2",
+        "desc": "Zero-shot + Semi-Soft Pool: Train 6 → Test ETTm1 (unseen)",
+        "datasets": "ETTm2,ETTh1,ETTh2,electricity,traffic,weather",
         "eval_data": "ETTh1",
         "target_data": "ETTm1",
         "pool": True,
@@ -131,58 +131,56 @@ experiments = [
     },
 
     # ------------------------------------------------------------------
-    # EXPERIMENT 7: Cross-frequency transfer
-    # Train on hourly (ETTh1,ETTh2) → Test on 15-min (ETTm1)
-    # Tests if model transfers across sampling frequencies
+    # EXPERIMENT 7: Zero-shot on Electricity (unseen)
+    # Train on 6 datasets (excluding electricity) → Test on Electricity
     # ------------------------------------------------------------------
     {
-        "name": "7_cross_freq_h_to_m",
-        "desc": "Cross-frequency: Train hourly (ETTh1,ETTh2) → Test 15-min (ETTm1)",
-        "datasets": "ETTh1,ETTh2",
-        "eval_data": "ETTh1",
-        "target_data": "ETTm1",
+        "name": "7_zero_shot_electricity",
+        "desc": "Zero-shot: Train 6 datasets → Test Electricity (unseen)",
+        "datasets": "ETTm1,ETTm2,ETTh1,ETTh2,traffic,weather",
+        "eval_data": "ETTm1",
+        "target_data": "electricity",
         "pool": False,
         "semi_soft_pool": False,
     },
 
     # ------------------------------------------------------------------
-    # EXPERIMENT 8: Cross-frequency WITH Semi-Soft Pool
+    # EXPERIMENT 8: Same as Exp 7 WITH Semi-Soft Pool
     # ------------------------------------------------------------------
     {
-        "name": "8_cross_freq_h_to_m_ssp",
-        "desc": "Cross-frequency + Semi-Soft Pool: Train hourly → Test 15-min",
-        "datasets": "ETTh1,ETTh2",
-        "eval_data": "ETTh1",
-        "target_data": "ETTm1",
+        "name": "8_zero_shot_electricity_ssp",
+        "desc": "Zero-shot + Semi-Soft Pool: Train 6 → Test Electricity (unseen)",
+        "datasets": "ETTm1,ETTm2,ETTh1,ETTh2,traffic,weather",
+        "eval_data": "ETTm1",
+        "target_data": "electricity",
         "pool": True,
         "semi_soft_pool": True,
     },
 
     # ------------------------------------------------------------------
     # EXPERIMENT 9: Random Pool baseline (paper's pool, random init)
-    # Same as Exp 3 but with random pool (to compare against your novelty)
+    # Same training as Exp 3 but with random pool (to compare against your novelty)
     # ------------------------------------------------------------------
     {
-        "name": "9_zero_shot_ETTh1_random_pool",
-        "desc": "Zero-shot + Random Pool (paper baseline): Train 3 → Test ETTh1",
-        "datasets": "ETTm1,ETTm2,ETTh2",
+        "name": "9_zero_shot_weather_random_pool",
+        "desc": "Zero-shot + Random Pool (paper): Train 6 → Test Weather",
+        "datasets": "ETTm1,ETTm2,ETTh1,ETTh2,electricity,traffic",
         "eval_data": "ETTm1",
-        "target_data": "ETTh1",
+        "target_data": "weather",
         "pool": True,
-        "semi_soft_pool": False,  # random pool, NOT semi-soft
+        "semi_soft_pool": False,
     },
 
     # ------------------------------------------------------------------
     # EXPERIMENT 10: No prompt at all (ablation)
-    # Same training data as Exp 3 but prompt=0
-    # Shows how much prompts contribute
+    # Same training as Exp 3 but prompt=0
     # ------------------------------------------------------------------
     {
-        "name": "10_zero_shot_ETTh1_no_prompt",
-        "desc": "Ablation: Zero-shot WITHOUT any prompt → Test ETTh1",
-        "datasets": "ETTm1,ETTm2,ETTh2",
+        "name": "10_zero_shot_weather_no_prompt",
+        "desc": "Ablation: Zero-shot WITHOUT any prompt → Test Weather",
+        "datasets": "ETTm1,ETTm2,ETTh1,ETTh2,electricity,traffic",
         "eval_data": "ETTm1",
-        "target_data": "ETTh1",
+        "target_data": "weather",
         "pool": False,
         "semi_soft_pool": False,
         "no_prompt": True,
