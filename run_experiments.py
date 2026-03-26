@@ -39,6 +39,7 @@ BASE_ARGS = {
     "itr": "1",
     "equal": "1",
     "use_token": "0",
+    "percent": "100",
 }
 
 experiments = [
@@ -321,9 +322,30 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="TEMPO Experiment Runner")
     parser.add_argument("--exp", type=str, default="quick", help="quick | novelty | all | 1,2,3 | results | plots | prompts")
+    parser.add_argument("--fast", action="store_true", help="Fast mode: 3 epochs, 10%% data, no pretrain")
+    parser.add_argument("--medium", action="store_true", help="Medium mode: 5 epochs, pretrained GPT-2")
     args = parser.parse_args()
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
+
+    # Apply speed modes
+    if args.fast:
+        BASE_ARGS["train_epochs"] = "3"
+        BASE_ARGS["pretrain"] = "0"
+        BASE_ARGS["batch_size"] = "32"
+        BASE_ARGS["percent"] = "10"
+        RESULTS_DIR = "./experiment_results_fast"
+        RESULTS_FILE = os.path.join(RESULTS_DIR, "results.json")
+        os.makedirs(RESULTS_DIR, exist_ok=True)
+        print("⚡ FAST MODE: 3 epochs, 10% data, no pretrain (~3-5 min per experiment)")
+    elif args.medium:
+        BASE_ARGS["train_epochs"] = "5"
+        BASE_ARGS["pretrain"] = "1"
+        BASE_ARGS["batch_size"] = "64"
+        RESULTS_DIR = "./experiment_results_medium"
+        RESULTS_FILE = os.path.join(RESULTS_DIR, "results.json")
+        os.makedirs(RESULTS_DIR, exist_ok=True)
+        print("🔶 MEDIUM MODE: 5 epochs, pretrained GPT-2 (~15-20 min per experiment)")
 
     if args.exp == "results":
         print_results_table()
