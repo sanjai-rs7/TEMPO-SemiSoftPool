@@ -323,6 +323,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="TEMPO Experiment Runner")
     parser.add_argument("--exp", type=str, default="quick", help="quick | novelty | all | 1,2,3 | results | plots | prompts")
     parser.add_argument("--fast", action="store_true", help="Fast mode: 3 epochs, 10%% data, no pretrain")
+    parser.add_argument("--lite", action="store_true", help="Lite mode: 5 epochs, 20%% data, pretrained GPT-2")
     parser.add_argument("--medium", action="store_true", help="Medium mode: 5 epochs, pretrained GPT-2")
     args = parser.parse_args()
 
@@ -338,6 +339,15 @@ if __name__ == "__main__":
         RESULTS_FILE = os.path.join(RESULTS_DIR, "results.json")
         os.makedirs(RESULTS_DIR, exist_ok=True)
         print("⚡ FAST MODE: 3 epochs, 10% data, no pretrain (~3-5 min per experiment)")
+    elif args.lite:
+        BASE_ARGS["train_epochs"] = "5"
+        BASE_ARGS["pretrain"] = "1"
+        BASE_ARGS["batch_size"] = "64"
+        BASE_ARGS["percent"] = "20"
+        RESULTS_DIR = "./experiment_results_lite"
+        RESULTS_FILE = os.path.join(RESULTS_DIR, "results.json")
+        os.makedirs(RESULTS_DIR, exist_ok=True)
+        print("🟢 LITE MODE: 5 epochs, 20% data, pretrained GPT-2 (~8-12 min per experiment)")
     elif args.medium:
         BASE_ARGS["train_epochs"] = "5"
         BASE_ARGS["pretrain"] = "1"
