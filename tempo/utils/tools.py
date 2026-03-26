@@ -74,7 +74,7 @@ class EarlyStopping:
         self.counter = 0
         self.best_score = None
         self.early_stop = False
-        self.val_loss_min = np.Inf
+        self.val_loss_min = np.inf
         self.delta = delta
 
     def __call__(self, val_loss, model, path):
@@ -105,7 +105,7 @@ class EarlyStopping_dist:
         self.counter = 0
         self.best_score = None
         self.early_stop = False
-        self.val_loss_min = np.Inf
+        self.val_loss_min = np.inf
         self.delta = delta
         # self.dist = dist
 
@@ -455,7 +455,7 @@ def test(model, test_data, test_loader, args, device, itr):
 
             pred = outputs.detach().cpu().numpy().astype(np.float16)
             true = batch_y.detach().cpu().numpy().astype(np.float16)
-            torch.cuda.empty_cache()
+            torch.cuda.empty_cache() if torch.cuda.is_available() else None
 
             # Calculate the batch errors
             batch_mae, batch_mse = metric_mae_mse(pred, true)
@@ -465,7 +465,7 @@ def test(model, test_data, test_loader, args, device, itr):
             total_mse += batch_mse * batch_x.size(0)
             n_samples += batch_x.size(0)
 
-            torch.cuda.empty_cache()
+            torch.cuda.empty_cache() if torch.cuda.is_available() else None
             
             # preds.append(pred)
             # trues.append(true)
@@ -564,7 +564,7 @@ def test_probs(model, test_data, test_loader, args, device, itr):
                 trues.append(batch_y[:,:, channel:channel+1].cpu().numpy())
                 masks.append(batch_x_mark[:,:, channel:channel+1].cpu().numpy())
 
-            torch.cuda.empty_cache()
+            torch.cuda.empty_cache() if torch.cuda.is_available() else None
             
     trues = np.array(trues)
     preds = np.array(preds)

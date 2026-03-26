@@ -1,0 +1,12 @@
+datasets:
+  ETTh1:
+    root_path: ./dataset/ETT-small/
+    data_path: ETTh1.csv
+    data_name: etth1
+    data: ett_h
+    lradj: type4
+    features: M
+    target: OT
+    embed: timeF
+    freq: 0
+    percent: 100

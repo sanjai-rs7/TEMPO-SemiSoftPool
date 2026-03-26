@@ -37,6 +37,7 @@ itr: 3
 cos: 1
 equal: 1
 pool: false
+semi_soft_pool: false
 no_stl_loss: false
 stl_weight: 0.001
 config_path: ./configs/custom_dataset.yml

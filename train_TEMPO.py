@@ -247,7 +247,7 @@ for ii in range(args.itr):
     # if args.freq == 0:
     #     args.freq = 'h'
 
-    device = torch.device('cuda:0')
+    device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda:0' if torch.cuda.is_available() else 'cpu')
     # Load the data
     train_data, train_loader, test_data, test_loader, vali_data, vali_loader = prepare_data_loaders(args, config)
 
@@ -356,10 +356,10 @@ for ii in range(args.itr):
     
 
     best_model_path = path + '/' + 'checkpoint.pth'
-    model.load_state_dict(torch.load(best_model_path), strict=False)
+    model.load_state_dict(torch.load(best_model_path, weights_only=False), strict=False)
     print("------------------------------------")
     mse, mae = test(model, test_data, test_loader, args, device, ii)
-    torch.cuda.empty_cache()
+    torch.cuda.empty_cache() if torch.cuda.is_available() else None
     print('test on the ' + str(args.target_data) + ' dataset: mse:' + str(mse) + ' mae:' + str(mae))
     
     mses.append(mse)

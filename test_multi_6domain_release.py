@@ -137,7 +137,7 @@ for ii in range(args.itr):
     # if args.freq == 0:
     #     args.freq = 'h'
 
-    device = torch.device('cuda:0')
+    device = torch.device('mps' if torch.backends.mps.is_available() else 'cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
     
@@ -271,23 +271,23 @@ for ii in range(args.itr):
 
     best_model_path = path + '/' + 'checkpoint.pth'
     print(best_model_path)
-    model.load_state_dict(torch.load(best_model_path), strict=False)
+    model.load_state_dict(torch.load(best_model_path, weights_only=False), strict=False)
     print("------------------------------------")
     mse, mae = test(model, test_data, test_loader, args, device, ii)
-    torch.cuda.empty_cache()
+    torch.cuda.empty_cache() if torch.cuda.is_available() else None
     print('test on the ' + str(args.target_data) + ' dataset: mse:' + str(mse) + ' mae:' + str(mae))
 #     mse, mae = test(model, test_data, test_loader, args, device, ii)
-#     torch.cuda.empty_cache()
+#     torch.cuda.empty_cache() if torch.cuda.is_available() else None
 #     mse_s, mae_s = test(model, test_data_s, test_loader_s, args, device, ii)
-#     torch.cuda.empty_cache()
+#     torch.cuda.empty_cache() if torch.cuda.is_available() else None
 #     mse_t, mae_t = test(model, test_data_t, test_loader_t, args, device, ii)
-#     torch.cuda.empty_cache()
+#     torch.cuda.empty_cache() if torch.cuda.is_available() else None
 #     mse_f, mae_f = test(model, test_data_f, test_loader_f, args, device, ii)
-#     torch.cuda.empty_cache()
+#     torch.cuda.empty_cache() if torch.cuda.is_available() else None
 #     mse_5, mae_5 = test(model, test_data_5, test_loader_5, args, device, ii)
-#     torch.cuda.empty_cache()
+#     torch.cuda.empty_cache() if torch.cuda.is_available() else None
 #     mse_6, mae_6 = test(model, test_data_6, test_loader_6, args, device, ii)
-#     torch.cuda.empty_cache()
+#     torch.cuda.empty_cache() if torch.cuda.is_available() else None
     
     mses.append(mse)
     maes.append(mae)

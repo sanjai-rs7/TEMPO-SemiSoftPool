@@ -153,12 +153,86 @@ class TEMPO(nn.Module):
                 self.top_k = 3
                 self.prompt_len = 3
                 self.token_len = self.prompt_len * self.top_k
-                for i in range(self.pool_size):
-                    prompt_shape = (self.prompt_len, 768)
-                    key_shape = (768)
-                    self.prompt_value_dict[f"prompt_value_{i}"] = nn.Parameter(torch.randn(prompt_shape))
-                    self.prompt_key_dict[f"prompt_key_{i}"] = nn.Parameter(torch.randn(key_shape))
-            
+
+                # --- NOVELTY: Semi-Soft Prompt Pool ---
+                # Check if semi_soft_pool is enabled in config
+                try:
+                    self.semi_soft_pool = configs.semi_soft_pool
+                except:
+                    self.semi_soft_pool = False
+
+                if self.semi_soft_pool:
+                    # 30 semantically meaningful English descriptions
+                    # 10 for trend patterns, 10 for seasonal patterns, 10 for residual patterns
+                    pool_templates = [
+                        # Trend patterns (0-9)
+                        "Strong upward trend with consistent growth over time",
+                        "Gradual downward trend with slow decline in values",
+                        "Flat stable trend with no significant change",
+                        "Sudden sharp increase followed by plateau",
+                        "Accelerating exponential growth trend",
+                        "Decelerating trend approaching a ceiling",
+                        "V shaped recovery trend after a drop",
+                        "Step function trend with abrupt level shift",
+                        "Oscillating trend with long period fluctuation",
+                        "Linear trend with constant rate of change",
+                        # Seasonal patterns (10-19)
+                        "Strong daily periodic cycle repeating every day",
+                        "Weekly seasonal pattern with weekend effects",
+                        "Monthly recurring pattern with regular peaks",
+                        "High frequency oscillation with short period",
+                        "Low frequency seasonal cycle with long period",
+                        "Seasonal pattern with increasing amplitude over time",
+                        "Seasonal pattern with decreasing amplitude fading",
+                        "Double peak seasonal pattern within each cycle",
+                        "Asymmetric seasonal pattern with sharp rise slow fall",
+                        "Irregular seasonal pattern with varying cycle length",
+                        # Residual patterns (20-29)
+                        "Low noise residual with small random fluctuations",
+                        "High variance residual with large unpredictable spikes",
+                        "Residual with occasional outlier extreme values",
+                        "Clustered volatility residual with bursts of noise",
+                        "White noise residual with uniform random variation",
+                        "Residual with gradual variance increase over time",
+                        "Residual with autocorrelated sequential dependence",
+                        "Sparse residual with mostly zero and rare spikes",
+                        "Heavy tailed residual with frequent large deviations",
+                        "Residual showing regime change in noise level",
+                    ]
+
+                    print("------ Initializing Semi-Soft Prompt Pool (NOVELTY) ------")
+                    # Use GPT-2's own wte to get semantic embeddings for each template
+                    for i, template in enumerate(pool_templates):
+                        token_ids = self.tokenizer(text=template, return_tensors="pt").to(device)
+                        with torch.no_grad():
+                            # Get word embeddings from frozen GPT-2 table
+                            emb = self.gpt2_trend.wte(token_ids['input_ids'])  # (1, num_tokens, 768)
+                            # Average across tokens to get one 768-dim summary vector
+                            emb_mean = emb.mean(dim=1).squeeze(0)  # (768,)
+
+                        # Key: initialized from semantic embedding (then trainable)
+                        self.prompt_key_dict[f"prompt_key_{i}"] = nn.Parameter(emb_mean.clone())
+
+                        # Value: repeat the semantic embedding to fill (prompt_len, 768)
+                        # Add small noise so the 3 tokens aren't identical
+                        prompt_shape = (self.prompt_len, 768)
+                        value_init = emb_mean.unsqueeze(0).repeat(self.prompt_len, 1)  # (3, 768)
+                        value_init = value_init + 0.01 * torch.randn(prompt_shape)  # small perturbation
+                        self.prompt_value_dict[f"prompt_value_{i}"] = nn.Parameter(value_init)
+
+                    # Trainable linear layer on top of pool values (the "semi-soft" part)
+                    self.pool_value_transform = nn.Linear(configs.d_model, configs.d_model)
+                    self.pool_value_transform.to(device=device)
+                    self.pool_value_transform.train()
+                    print(f"Semi-Soft Pool: {self.pool_size} prompts initialized from semantic templates")
+                else:
+                    # Original random initialization
+                    for i in range(self.pool_size):
+                        prompt_shape = (self.prompt_len, 768)
+                        key_shape = (768)
+                        self.prompt_value_dict[f"prompt_value_{i}"] = nn.Parameter(torch.randn(prompt_shape))
+                        self.prompt_key_dict[f"prompt_key_{i}"] = nn.Parameter(torch.randn(key_shape))
+
                 self.prompt_record = {f"id_{i}": 0 for i in range(self.pool_size)}
                 self.prompt_record_trend = {}
                 self.prompt_record_season = {}
@@ -289,7 +363,7 @@ class TEMPO(nn.Module):
         print(f"Loading model from: {best_model_path}")
         
         # Load the state dict
-        state_dict = torch.load(checkpoint_path, map_location=device)
+        state_dict = torch.load(checkpoint_path, map_location=device, weights_only=False)
         model.load_state_dict(state_dict, strict=False)
         
         return model
@@ -340,6 +414,10 @@ class TEMPO(nn.Module):
         batch_size, top_k, length, c = batched_prompt_raw.shape # [16, 3, 5, 768]
         batched_prompt = batched_prompt_raw.reshape(batch_size, top_k * length, c) 
        
+        # NOVELTY: Apply trainable linear transform for semi-soft pool
+        if hasattr(self, 'semi_soft_pool') and self.semi_soft_pool:
+            batched_prompt = self.pool_value_transform(batched_prompt)
+
         batched_key_norm = prompt_norm[idx]
         summary_embed_norm = summary_embed_norm.unsqueeze(1)
         sim = batched_key_norm * summary_embed_norm
