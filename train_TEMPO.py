@@ -196,6 +196,7 @@ parser.add_argument('--itr', type=int, default=3)
 parser.add_argument('--cos', type=int, default=0)
 parser.add_argument('--equal', type=int, default=1, help='1: equal sampling, 0: dont do the equal sampling')
 parser.add_argument('--pool', action='store_true', help='whether use prompt pool')
+parser.add_argument('--semi_soft_pool', action='store_true', help='whether use semi-soft prompt pool (novelty)')
 parser.add_argument('--no_stl_loss', action='store_true', help='whether use prompt pool')
 
 parser.add_argument('--stl_weight', type=float, default=0.01)
